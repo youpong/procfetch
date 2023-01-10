@@ -1,4 +1,11 @@
-# procfetch
+# procfetch 
+[![codecov](https://codecov.io/gh/TanmayPatil105/procfetch/branch/main/graph/badge.svg?token=QR6JGV3862)](https://codecov.io/gh/TanmayPatil105/procfetch)
+![](https://github.com/TanmayPatil105/procfetch/actions/workflows/unit-test.yml/badge.svg)
+![](https://github.com/TanmayPatil105/procfetch/actions/workflows/doxygen-gh-pages.yml/badge.svg)
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/92677342/205502731-328ab040-1df7-4b1b-bfa2-c5b84adafb85.png" width="1000">
+</p>
 
 #### procfetch is a command-line tool to fetch system information and display it on the screen. 
 #### It is written in `C++`. 
@@ -24,8 +31,29 @@
 * Uptime
 * Temperature
 
+## Prerequisites
+
+* GNU Make
+* GCC
+* ClangFormat
+* Doxygen
+* Graphviz
+
+## Documentation
+
+See the [documentation](https://tanmaypatil105.github.io/procfetch/)
+
 ## Installation
 
+### Brew
+```
+$ brew tap TanmayPatil105/tap
+```
+```
+$ brew install procfetch
+```
+
+### Manually
 ```
 $ git clone https://github.com/TanmayPatil105/procfetch.git
  ```
@@ -54,6 +82,46 @@ $ ./uninstall.sh
 ![](./images/tty.gif)
 
 <hr/>
+
+## Usage
+
+- `-a` to change color of ascii_art
+```bash
+$ procfetch -a cyan
+```
+
+- `-d` to change print ascii_art of different distros
+```bash
+$ procfetch -d Manjaro
+```
+## Docker
+
+Define environment variable `PROCFETCH` in the actual project home directory.
+
+```sh
+$ PROCFETCH=$HOME/procfetch
+```
+
+Build Docker image
+
+```sh
+$ docker build -t procfetch .
+```
+
+Build with Docker container
+```sh
+$ docker run --rm -v $PROCFETCH:/procfetch -w /procfetch procfetch make
+```
+
+Run with Docker container
+```sh
+$ docker run --rm -v $PROCFETCH:/procfetch -w /procfetch procfetch make run
+```
+
+Test with Docker container
+```sh
+$ docker run --rm -v $PROCFETCH:/procfetch -w /procfetch procfetch make check
+```
 
 ### Contributing
 

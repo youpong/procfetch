@@ -1,123 +1,20 @@
-#include <iostream>
-#include <bits/stdc++.h>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <unistd.h>
-#include "color.h"
-using namespace std;
+/**
+ * @file
+ */
+#include "fetch.h"
 
-string exec(string command);
-
-string getuser();
-
-string gethostname(string path);
-
-string getOS(string path);
-
-string getHardwarePlatform();
-
-string getHost(string path);
-
-string getKernel(string path);
-
-string getUpTime(string path);
-
-string getRAM(string path);
-
-string getSHELL(string path);
-
-string getDE();
-
-string getRES(string path);
-
-string getTheme();
-
-string getIcons();
-
-string getCPU(string path);
-
-int getCPUtemp(string path);
-
-vector<string> getGPU();
-
-string getPackages();
-
-string getColor();
-
-void print();
-
-int main()
-{
-    print();
-    string user = getuser();
-    string hostname = gethostname("/etc/hostname");
-    string username = YELLOW + user + RESET + "@" + YELLOW + hostname;
-    cout << UNDERSCORE << username << RESET << endl;
-    cout << endl;
-    string os = getOS("/etc/os-release");
-    cout << BRIGHT << GREEN << "OS : " << RESET << os << getHardwarePlatform() << endl;
-    string HOST = getHost("/sys/devices/virtual/dmi/id/");
-    cout << BRIGHT << GREEN << "Host : " << RESET << HOST << endl;
-    string kernel = getKernel("/proc/sys/kernel/osrelease");
-    cout << BRIGHT << GREEN << "Kernel : " << RESET << kernel << endl;
-    string upTime = getUpTime("/proc/uptime");
-    cout << BRIGHT << GREEN << "UpTime : " << RESET << upTime << endl;
-    string ram = getRAM("/proc/meminfo");
-    cout << BRIGHT << GREEN << "RAM : " << RESET << ram << endl;
-    string shell = getSHELL("/etc/passwd");
-    cout << BRIGHT << GREEN << "shell : " << RESET << shell << endl;
-    string DE = getDE();
-    cout << BRIGHT << GREEN << "DE : " << RESET << DE << endl;
-    string res = getRES("/sys/class/graphics/fb0/modes");
-    cout << BRIGHT << GREEN << "Resolution : " << RESET << res << endl;
-    string theme = getTheme();
-    cout << BRIGHT << GREEN << "Theme : " << RESET << theme << endl;
-    string icon = getIcons();
-    cout << BRIGHT << GREEN << "Icons : " << RESET << icon << endl;
-    string cpu = getCPU("/proc/cpuinfo");
-    cout << BRIGHT << GREEN << "CPU : " << RESET << cpu << endl;
-    if (HOST.find("VirtualBox") == string::npos)
-    {
-        int temp = getCPUtemp("/sys/class/thermal/thermal_zone0/temp");
-        cout << BRIGHT << GREEN << "CPU Temperature : " << RESET << float(temp / 1000.0) << " °C" << endl;
-    }
-    vector<string> gpu = getGPU();
-    for (auto it : gpu)
-    {
-        cout << BRIGHT << GREEN "GPU : " << RESET << it << endl;
-    }
-    string pkg = getPackages();
-    cout << BRIGHT << GREEN << "Packages : " << RESET << pkg << endl;
-    cout << endl;
-    return 0;
-}
-
-
-string exec(string command)
-{
-    char buffer[128];
-    string result = "";
-    FILE *pipe = popen(command.c_str(), "r");
-    if (!pipe)
-    {
-        return "popen failed!";
-    }
-    while (!feof(pipe))
-    {
-        if (fgets(buffer, 128, pipe) != NULL)
-            result += buffer;
-    }
-
-    pclose(pipe);
-    return result;
-}
-
+/**
+ * @returns gets the username
+ */
 string getuser()
 {
     return getenv("USER");
 }
 
+/**
+ * @returns gets the hostname
+ * @param path
+ */
 string gethostname(string path)
 {
     fstream fptr;
@@ -127,35 +24,52 @@ string gethostname(string path)
     return hostname;
 }
 
+/**
+ * @returns gets name of Operating System
+ * @param path
+ */
 string getOS(string path)
 {
     fstream fptr;
     fptr.open(path, ios::in);
-    string line, sub;
+    string os_name, variable_name, quote;
 
     while (fptr)
     {
-        getline(fptr, line);
-        sub = line.substr(0, 13);
-        if (sub == "PRETTY_NAME=\"")
+        getline(fptr, os_name);
+        variable_name = os_name.substr(0, 13);
+        if (variable_name == "PRETTY_NAME=\"")
         {
+            quote = "\"";
+            break;
+        }
+        if (variable_name == "PRETTY_NAME=\'")
+        {
+            quote = "\'";
             break;
         }
     }
 
-    line = line.substr(line.find("\"") + 1);
-    line = line.substr(0, line.find("\""));
+    os_name = os_name.substr(os_name.find(quote) + 1);
+    os_name = os_name.substr(0, os_name.find(quote));
 
-    return line;
+    return os_name;
 }
 
+/**
+ * @returns gets HardWare Platform
+ */
 string getHardwarePlatform()
 {
-    string s = exec("uname -m");
+    string s = Command::exec("uname -m"s).getOutput();
     s = s.substr(0, s.find("\n"));
     return " " + s;
 }
 
+/**
+ * @returns gets Host
+ * @param path
+ */
 string getHost(string path)
 {
     fstream f1, f2;
@@ -176,6 +90,10 @@ string getHost(string path)
     return host;
 }
 
+/**
+ * @returns gets kernel
+ * @param path
+ */
 string getKernel(string path)
 {
     fstream fptr;
@@ -185,6 +103,10 @@ string getKernel(string path)
     return kernel;
 }
 
+/**
+ * @returns get Uptime
+ * @param path
+ */
 string getUpTime(string path)
 {
     fstream fptr;
@@ -209,7 +131,8 @@ string getUpTime(string path)
     }
     else
     {
-        timeS = to_string(d) + " d, " + to_string(h % 24) + " hours, " + to_string(m % 60) + " mins";
+        timeS = to_string(d) + " d, " + to_string(h % 24) + " hours, " +
+                to_string(m % 60) + " mins";
     }
 
     return timeS;
@@ -221,6 +144,10 @@ static string getsize(string s) {
     return s.substr(b, e - b);
 }
 
+/**
+ * @returns gets RAM usage details
+ * @param path
+ */
 string getRAM(string path)
 {
     fstream fptr;
@@ -250,9 +177,14 @@ string getRAM(string path)
     int memFree = stoi(free);
     int memAvail = (memTotal - memFree) - stoi(shmem);
 
-    return to_string(memAvail / 1024) + "MiB / " + to_string(memTotal / 1024) + "MiB";
+    return to_string(memAvail / 1024) + "MiB / " + to_string(memTotal / 1024) +
+           "MiB";
 }
 
+/**
+ * @returns gets type of shell
+ * @param path
+ */
 string getSHELL(string path)
 {
     fstream fptr;
@@ -273,11 +205,18 @@ string getSHELL(string path)
     return line;
 }
 
+/**
+ * @returns gets the Desktop Environment
+ */
 string getDE()
 {
     return getenv("XDG_CURRENT_DESKTOP");
 }
 
+/**
+ * @returns gets current Screen Resolution
+ * @param path
+ */
 string getRES(string path)
 {
     fstream fptr;
@@ -288,20 +227,32 @@ string getRES(string path)
     return res.substr(0, res.find("p"));
 }
 
+/**
+ * @returns gets current Theme info
+ */
 string getTheme()
 {
-    string theme = exec("gsettings get org.gnome.desktop.interface gtk-theme");
-    theme = theme.substr(1);
-    return theme.substr(0, theme.find("\'"));
+    auto c =
+        Command::exec("gsettings get org.gnome.desktop.interface gtk-theme"s);
+    auto s = c.getOutput();
+    return s.substr(1, s.find("\'", 1) - 1);
 }
 
+/**
+ * @returns gets current Icon info
+ */
 string getIcons()
 {
-    string icon = exec(" gsettings get org.gnome.desktop.interface icon-theme");
-    icon = icon.substr(1);
-    return icon.substr(0, icon.find("\'"));
+    auto c =
+        Command::exec("gsettings get org.gnome.desktop.interface icon-theme"s);
+    auto s = c.getOutput();
+    return s.substr(1, s.find("\'", 1) - 1);
 }
 
+/**
+ * @returns gets CPU info
+ * @param path
+ */
 string getCPU(string path)
 {
     fstream fptr;
@@ -322,6 +273,10 @@ string getCPU(string path)
     return cpu;
 }
 
+/**
+ * @returns gets CPU temp
+ * @param path
+ */
 int getCPUtemp(string path)
 {
     fstream fptr;
@@ -331,10 +286,26 @@ int getCPUtemp(string path)
     return stoi(temp);
 }
 
+/**
+ * @returns checks for CPUtemp file
+ */
+bool CpuTempCheck()
+{
+    if (Path::of("/sys/class/thermal/thermal_zone1"s).is_directory())
+    {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @returns gets vendor of Internal and External GPU
+ */
 vector<string> getGPU()
 {
     vector<string> gpu;
-    string igpu = exec("lspci | grep -E  \"VGA|3D|Display\"");
+    auto c = Command::exec("lspci | grep -E  \"VGA|3D|Display\"");
+    string igpu = c.getOutput();
     int temp = 0, k = 0;
 
     for (size_t i = 0; i < igpu.size(); i++)
@@ -351,186 +322,159 @@ vector<string> getGPU()
     return gpu;
 }
 
+/**
+ * @returns gets count of all packages installed
+ */
 string getPackages()
 {
+    auto red = Crayon{}.red();
     string pkg = "";
-    if (exec(" [ -f \"/bin/dpkg\" ] && echo \"1\"|wc -l  ").size() > 1)
+    if (Path::of("/bin/dpkg"s).is_executable())
     {
-        string dpkg = exec(" dpkg -l | wc -l ");
-        pkg += dpkg.substr(0, dpkg.size() - 1) + RED + " dpkg; " + RESET;
+        auto c = Command::exec("dpkg -l"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" dpkg; ");
     }
-    if (exec(" [ -f \"/bin/snap\" ] && echo \"1\"|wc -l  ").size() > 1)
+    if (Path::of("/bin/snap"s).is_executable())
     {
-        string snap = exec(" snap list | wc -l ");
-        pkg += snap.substr(0, snap.size() - 1) + RED + " snap; " + RESET;
+        auto c = Command::exec("snap list"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" snap; ");
     }
-    if (exec(" [ -f \"/bin/pacman\" ] && echo \"1\"|wc -l  ").size() > 1)
+    if (Path::of("/bin/pacman"s).is_executable())
     {
-        string pacman = exec(" pacman -Q | wc -l  ");
-        pkg += pacman.substr(0, pacman.size() - 1) + RED + " pacman; " + RESET;
+        auto c = Command::exec("pacman -Q"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" pacman; ");
     }
-    if (exec(" [ -f \"/bin/flatpak\" ] && echo \"1\"|wc -l  ").size() > 1)
+    if (Path::of("/bin/flatpak"s).is_executable())
     {
-        string flatpak = exec(" flatpak list | wc -l ");
-        pkg += flatpak.substr(0, flatpak.size() - 1) + RED + " flatpak; " + RESET;
+        auto c = Command::exec("flatpak list"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" flatpak; ");
     }
-    if (exec(" [ -f \"/var/lib/rpm\" ] && echo \"1\"|wc -l  ").size() > 1)
+    if (Path::of("/var/lib/rpm"s).is_executable())
     {
-        string rpm = exec(" rpm -qa | wc -l ");
-        pkg += rpm.substr(0, rpm.size() - 1) + RED + " rpm; " + RESET;
+        auto c = Command::exec("rpm -qa"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" rpm; ");
     }
-    if (exec(" [ -f \"/bin/npm\" ] && echo \"1\"|wc -l  ").size() > 1)
+    if (Path::of("/bin/npm"s).is_executable())
     {
-        string npm = exec(" npm list | wc -l ");
-        pkg += npm.substr(0, npm.size() - 1) + RED + " npm; " + RESET;
+        auto c = Command::exec("npm list"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" npm; ");
     }
-    if (exec(" [ -f \"/bin/emerge\" ] && echo \"1\"|wc -l  ").size() > 1) // gentoo
+    if (Path::of("/bin/emerge"s).is_executable()) // gentoo
     {
-        string portage = exec("echo -n $(cd /var/db/pkg && ls -d */* | wc -l");
-        pkg += portage.substr(0, portage.size() - 1) + RED + " portage; " + RESET;
+        pkg += "not supported"s + red.text(" portage; ");
     }
-    if (exec(" [ -f \"/bin/xbps-install\" ] && echo \"1\"|wc -l  ").size() > 1) // void linux
+    if (Path::of("/bin/xbps-install"s).is_executable()) // void linux
     {
-        string xbps = exec(" flatpak list | wc -l ");
-        pkg += xbps.substr(0, xbps.size() - 1) + RED + " xbps; " + RESET;
+        auto c = Command::exec("flatpak list"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" xbps; ");
     }
-    if (exec(" [ -f \"/bin/dnf\" ] && echo \"1\"|wc -l  ").size() > 1) // fedora
+    if (Path::of("/bin/dnf"s).is_executable()) // fedora
     {
-        string dnf = exec(" dnf list installed| wc -l ");
-        pkg += dnf.substr(0, dnf.size() - 1) + RED + " dnf; " + RESET;
+        auto c = Command::exec("dnf list installed"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" dnf; ");
     }
-    if (exec(" [ -f \"/bin/yum\" ] && echo \"1\"|wc -l  ").size() > 1) // redhat
+    if (Path::of("/bin/zypper"s).is_executable()) // opensuse
     {
-        string yum = exec(" yum list installed | wc -l ");
-        pkg += yum.substr(0, yum.size() - 1) + RED + " yum; " + RESET;
+        auto c = Command::exec("zypper se --installed-only"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" zypper; ");
     }
-    if (exec(" [ -f \"/bin/zypper\" ] && echo \"1\"|wc -l  ").size() > 1) // opensuse
+    if (Path::of("/home/linuxbrew/.linuxbrew/bin/brew"s).is_executable())
     {
-        string zypper = exec(" zypper se --installed-only | wc -l ");
-        pkg += zypper.substr(0, zypper.size() - 1) + RED + " zypper; " + RESET;
+        auto c = Command::exec("brew list | { tr '' '\n'; }"s);
+        pkg += to_string(c.getOutputLines()) + red.text(" brew; ");
     }
 
     return pkg;
 }
 
-string getColor(string line)
+/**
+ * @param art
+ * @param color_name
+ */
+void print_process(string art, string color_name)
 {
-    string color;
-    if (line.substr(0, line.find(" ")) == "RED")
-    {
-        color = RED;
-    }
-    else if (line.substr(0, line.find(" ")) == "BLACK")
-    {
-        color = BLACK;
-    }
-    else if (line.substr(0, line.find(" ")) == "GREEN")
-    {
-        color = GREEN;
-    }
-    else if (line.substr(0, line.find(" ")) == "YELLOW")
-    {
-        color = YELLOW;
-    }
-    else if (line.substr(0, line.find(" ")) == "BLUE")
-    {
-        color = BLUE;
-    }
-    else if (line.substr(0, line.find(" ")) == "MAGENTA")
-    {
-        color = MAGENTA;
-    }
-    else if (line.substr(0, line.find(" ")) == "CYAN")
-    {
-        color = CYAN;
-    }
-    else if (line.substr(0, line.find(" ")) == "WHITE")
-    {
-        color = WHITE;
-    }
-    else if (line.substr(0, line.find(" ")) == "BBLACK")
-    {
-        color = BBLACK;
-    }
-    else if (line.substr(0, line.find(" ")) == "BGRAY")
-    {
-        color = BGRAY;
-    }
-    else if (line.substr(0, line.find(" ")) == "BRED")
-    {
-        color = BRED;
-    }
-    else if (line.substr(0, line.find(" ")) == "BGREEN")
-    {
-        color = BGREEN;
-    }
-    else if (line.substr(0, line.find(" ")) == "BYELLOW")
-    {
-        color = BYELLOW;
-    }
-    else if (line.substr(0, line.find(" ")) == "BBLUE")
-    {
-        color = BBLUE;
-    }
-    else if (line.substr(0, line.find(" ")) == "BMAGENTA")
-    {
-        color = BMAGENTA;
-    }
-    else if (line.substr(0, line.find(" ")) == "BCYAN")
-    {
-        color = BCYAN;
-    }
-    else if (line.substr(0, line.find(" ")) == "BWHITE")
-    {
-        color = BWHITE;
-    }
-
-    return color;
-}
-
-void print_process(string art)
-{
-    string color;
-    string path="/usr/share/procfetch/ascii/" + art;
+    string path = "/usr/share/procfetch/ascii/" + art;
     fstream fptr;
     fptr.open(path, ios::in);
     string txt;
-    getline(fptr,txt);
-    color=getColor(txt);
-    cout<<color<<endl;
-    while(fptr)
+    getline(fptr, txt);
+    auto style = Crayon{}.bright();
+    if (color_name == "def")
     {
-        getline(fptr,txt);
-        cout<<BRIGHT<<color<<txt<<endl;
+        style = style.color(txt.substr(0, txt.find(" ")));
+    }
+    else
+    {
+        transform(color_name.begin(), color_name.end(), color_name.begin(),
+                  ::toupper);
+        style = style.color(color_name.substr(0, color_name.find(" ")));
+    }
+    cout << style.text(""s) << endl;
+    while (fptr)
+    {
+        getline(fptr, txt);
+        cout << style.text(txt) << endl;
     }
     fptr.close();
 }
 
-void print()
+/**
+ * Utility to print ascii art of Distro
+ * @param color_name
+ * @param distro_name
+ */
+void print(string color_name, string distro_name)
 {
-    string os = getOS("/etc/os-release");
+    string os = distro_name;
 
-    map<string, string> ascii_arts;
-
-    ascii_arts["Ubuntu"] = {"ubuntu.ascii"};
-    ascii_arts["Debian"] = {"debian.ascii"};
-    ascii_arts["Fedora"] = {"fedora.ascii"};
-    ascii_arts["Red Hat"] = {"redhat.ascii"};
-    ascii_arts["Arch Linux"] = {"arch.ascii"};
-    ascii_arts["Manjaro"] = {"manjaro.ascii"};
-    ascii_arts["Archcraft"] = {"archcraft.ascii"};
-    ascii_arts["Kali"] = {"kali.ascii"};
-    ascii_arts["Parrot"] = {"parrot.ascii"};
-    ascii_arts["OpenSuse"] = {"opensuse.ascii"};
-    ascii_arts["Linux Mint"] = {"linuxmint.ascii"};
-    ascii_arts["EndeavourOS"] = {"endeavouros.ascii"};
-
-    for(auto it=ascii_arts.begin(); it!=ascii_arts.end(); it++)
+    if (distro_name == "def")
     {
-        if(os.find(it->first) != string::npos)
+        os = getOS("/etc/os-release");
+    }
+
+    map<string, string> ascii_arts = {{"Ubuntu", "ubuntu.ascii"},
+                                      {"Debian", "debian.ascii"},
+                                      {"Fedora", "fedora.ascii"},
+                                      {"Red Hat", "redhat.ascii"},
+                                      {"Arch Linux", "arch.ascii"},
+                                      {"Manjaro", "manjaro.ascii"},
+                                      {"Archcraft", "archcraft.ascii"},
+                                      {"Kali", "kali.ascii"},
+                                      {"Parrot", "parrot.ascii"},
+                                      {"OpenSuse", "opensuse.ascii"},
+                                      {"Linux Mint", "linuxmint.ascii"},
+                                      {"EndeavourOS", "endeavouros.ascii"},
+                                      {"Pop!_OS", "pop!_os.ascii"},
+                                      {"Gentoo", "gentoo.ascii"},
+                                      {"elementary OS", "elementaryos.ascii"},
+                                      {"Slackware", "slackware.ascii"},
+                                      {"Asahi Linux", "asahi.ascii"},
+                                      {"Peppermint", "peppermintos.ascii"},
+                                      {"CentOS", "centos.ascii"},
+                                      {"Lubuntu", "lubuntu.ascii"},
+                                      {"Navy Linux", "navylinux.ascii"},
+                                      {"BlackArch", "blackarch.ascii"},
+                                      {"SteamOS", "steamos.ascii"},
+                                      {"MX", "mxlinux.ascii"},
+                                      {"Linux Lite", "linuxlite.ascii"},
+                                      {"Bodhi", "bodhilinux.ascii"},
+                                      {"Xubuntu", "xubuntu.ascii"},
+                                      {"Kubuntu", "kubuntu.ascii"},
+                                      {"Rocky", "rocky.ascii"},
+                                      {"Deepin", "deepin.ascii"},
+                                      {"Zorin", "zorin.ascii"},
+                                      {"Garuda", "garudalinux.ascii"}};
+
+    for (const auto &[key, value] : ascii_arts)
+    {
+        if (os.find(key) != string::npos)
         {
-            print_process(it->second);
+            print_process(value, color_name);
             return;
         }
     }
+
+    print_process("linux.ascii", color_name);
+
+    return;
 }
