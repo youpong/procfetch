@@ -138,7 +138,7 @@ string getUpTime(string path)
     return timeS;
 }
 
-static string getsize(string s) {
+static string getSize(string s) {
     size_t b = s.find_first_of("0123456789");
     size_t e = s.find(" ", b);
     return s.substr(b, e - b);
@@ -160,15 +160,15 @@ string getRAM(string path)
         sub = line.substr(0, line.find(":"));
         if (sub == "MemTotal")
         {
-            total = getsize(line);
+            total = getSize(line);
         }
         if (sub == "MemAvailable")
         {
-            free = getsize(line);
+            free = getSize(line);
         }
         if (sub == "Buffers")
         {
-            shmem = getsize(line);
+            shmem = getSize(line);
             break;
         }
     }
