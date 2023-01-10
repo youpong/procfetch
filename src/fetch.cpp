@@ -138,13 +138,6 @@ string getUpTime(string path)
     return timeS;
 }
 
-static string getSize(string s)
-{
-    size_t b = s.find_first_of("0123456789");
-    size_t e = s.find(" ", b);
-    return s.substr(b, e - b);
-}
-
 /**
  * @returns gets RAM usage details
  * @param path
@@ -157,6 +150,12 @@ string getRAM(string path)
     string total, free;
     while (fptr)
     {
+        auto getSize = [](string s) {
+            auto begin = s.find_first_of("0123456789");
+            auto end = s.find(" ", begin);
+            return s.substr(begin, end - begin);
+        };
+
         getline(fptr, line);
         sub = line.substr(0, line.find(":"));
         if (sub == "MemTotal")
