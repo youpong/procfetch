@@ -72,6 +72,10 @@ $ git clone https://github.com/TanmayPatil105/procfetch.git; cd procfetch
 ```bash
 $ ./configure
 ```
+
+`configure` script has options to specify the C++ compiler and path to install.
+For more information, use the `--help` option.
+
 ```bash
 $ sudo make install
 ```
